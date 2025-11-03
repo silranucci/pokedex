@@ -8,7 +8,9 @@
     "dev": "tsx --env-file=.env --watch src/main.ts",
     "lint": "eslint \"**/{src,test,examples,scripts,dtslint}/**/*.{ts,mjs}\"",
     "lint:fix": "npm run lint -- --fix",
-    "test": "vitest"
+    "test": "vitest",
+    "test:smoke": "vitest --config vitest.smoke.config.ts",
+    "test:all": "vitest --config vitest.config.ts && vitest --config vitest.smoke.config.ts"
   },
   "keywords": [],
   "author": "Silvestro Ranucci",
@@ -17,7 +19,10 @@
     "@effect/eslint-plugin": "^0.3.2",
     "@effect/language-service": "latest",
     "@effect/vitest": "^0.25.1",
+    "@fast-check/vitest": "^0.2.3",
     "@types/node": "^22.8.5",
+    "msw": "^2.11.6",
+    "nock": "^14.0.10",
     "prettier": "^3.3.3",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",

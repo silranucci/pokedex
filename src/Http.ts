@@ -1,12 +1,14 @@
 import { HttpApiBuilder, HttpApiSwagger, HttpMiddleware, HttpServer } from "@effect/platform"
 import { NodeHttpServer } from "@effect/platform-node"
 import { HealthCheckLive } from "app/Application/HealthCheck/Http"
+import { HttpPokemonLive } from "app/Application/Pokemon/Http"
 import { Layer } from "effect"
 import { createServer } from "http"
 import { Api } from "./Api.js"
 
-const ApiLive = Layer.provide(HttpApiBuilder.api(Api), [
-  HealthCheckLive
+export const ApiLive = Layer.provide(HttpApiBuilder.api(Api), [
+  HealthCheckLive,
+  HttpPokemonLive
 ])
 
 export const HttpLive = HttpApiBuilder.serve(HttpMiddleware.logger).pipe(
