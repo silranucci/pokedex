@@ -25,6 +25,21 @@ export const HttpPokemonLive = HttpApiBuilder.group(Api, "pokemon", (handlers) =
             )
           )
         ))
+      .handle("getByTranslated", ({ path }) =>
+        pokemon.getByTranslated(path.name).pipe(
+          Effect.tapError(Console.error),
+          Effect.mapError((e) =>
+            Match.value(e._tag).pipe(
+              Match.when("PokemonNotFoundError", () =>
+                ApiError.NotFoundError.make({ message: `${path.name} not found` })),
+              Match.when("PokemonFetchError", () =>
+                ApiError.InternalServerError.make({ message: "Sorry, something went wrong!" })),
+              Match.when("TranslationError", () =>
+                ApiError.InternalServerError.make({ message: "Sorry, something went wrong!" })),
+              Match.exhaustive
+            )
+          )
+        ))
   })).pipe(
     Layer.provide([
       PokemonService.PokemonService.Live

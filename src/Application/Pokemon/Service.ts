@@ -1,5 +1,8 @@
 import * as PokemonRespository from "app/Application/Ports/PokemonRepository"
-import type * as Pokemon from "app/Domain/Pokemon"
+import type { TranslationError } from "app/Application/Ports/TranslationService"
+import { TranslationService } from "app/Application/Ports/TranslationService"
+import * as Pokemon from "app/Domain/Pokemon"
+import { FunTranslationApi } from "app/Infrastructure/FunTranslationApi"
 import { PokeApi } from "app/Infrastructure/PokeApi"
 import { Context, Effect, Layer } from "effect"
 
@@ -10,14 +13,42 @@ interface IPokemonService {
     | Pokemon.PokemonFetchError,
     never
   >
+  readonly getByTranslated: (name: Pokemon.PokemonName) => Effect.Effect<
+    Pokemon.Pokemon,
+    | Pokemon.PokemonNotFoundError
+    | Pokemon.PokemonFetchError
+    | TranslationError,
+    never
+  >
 }
 
 const _PokemonSevice = Effect.gen(function*() {
   const pokemonRepo = yield* PokemonRespository.PokemonRepository
+  const translationService = yield* TranslationService
 
   const getBy = (name: Pokemon.PokemonName) => pokemonRepo.findByName(name)
 
-  return { getBy } as const
+  const getByTranslated = (name: Pokemon.PokemonName) =>
+    Effect.gen(function*() {
+      const pokemon = yield* pokemonRepo.findByName(name)
+      // If the description is empty the getByTranslated
+      // degenerates to a getBy
+      if (pokemon.description === "") {
+        return pokemon
+      }
+
+      const translate = pokemon.shouldUseYodaTranslation()
+        ? translationService.translateToYoda
+        : translationService.translateToShakespeare
+      const translatedDescription = yield* translate(pokemon.description)
+
+      return Pokemon.Pokemon.make({
+        ...pokemon,
+        description: translatedDescription
+      })
+    })
+
+  return { getBy, getByTranslated } as const
 })
 
 export class PokemonService extends Context.Tag("Pokemon")<PokemonService, IPokemonService>() {
@@ -26,7 +57,8 @@ export class PokemonService extends Context.Tag("Pokemon")<PokemonService, IPoke
     _PokemonSevice
   ).pipe(
     Layer.provide(Layer.mergeAll(
-      PokeApi
+      PokeApi,
+      FunTranslationApi
     ))
   )
 }
