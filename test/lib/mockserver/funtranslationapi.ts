@@ -46,7 +46,7 @@ export const errorHandlers = {
       {
         error: {
           code: 429,
-          message: "Too Many Requests: Rate limit of 5 requests per hour exceeded."
+          message: "Too Many Requests. Retry in 1 hour."
         }
       },
       { status: 429 }

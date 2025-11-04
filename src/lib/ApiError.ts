@@ -16,3 +16,11 @@ export class InternalServerError extends Schema.TaggedError<InternalServerError>
   },
   HttpApiSchema.annotations({ status: 500 })
 ) {}
+
+export class TooManyRequest extends Schema.TaggedError<TooManyRequest>()(
+  "TooManyRequest",
+  {
+    message: Schema.String
+  },
+  HttpApiSchema.annotations({ status: 429 })
+) {}

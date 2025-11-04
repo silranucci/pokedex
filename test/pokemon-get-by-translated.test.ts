@@ -179,16 +179,32 @@ describe("Pokemon API - getByTranslated", () => {
       })
     })
 
-    it("should return 500 when translation API rate limit exceeded (429)", async () => {
+    it("should return 429 when translation API rate limit exceeded", async () => {
       server.use(errorHandlers.funTranslationApi.translationApiRateLimit)
 
       const response = await fetch(`${baseUrl}/pokemon/translated/pikachu`)
 
-      expect(response.status).toBe(500)
+      expect(response.status).toBe(429)
       const data = await response.json()
       expect(data).toMatchObject({
-        _tag: "InternalServerError",
-        message: "Sorry, something went wrong!"
+        _tag: "TooManyRequest",
+        message: "Retry in 1 hour"
+      })
+    })
+
+    it("should handle rate limit for Yoda translation (legendary pokemon)", async () => {
+      server.use(
+        errorHandlers.pokeApi.speciesNullHabitat, // mewtwo is legendary
+        errorHandlers.funTranslationApi.translationApiRateLimit
+      )
+
+      const response = await fetch(`${baseUrl}/pokemon/translated/mewtwo`)
+
+      expect(response.status).toBe(429)
+      const data = await response.json()
+      expect(data).toMatchObject({
+        _tag: "TooManyRequest",
+        message: "Retry in 1 hour"
       })
     })
 

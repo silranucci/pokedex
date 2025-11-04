@@ -1,5 +1,5 @@
 import * as PokemonRespository from "app/Application/Ports/PokemonRepository"
-import type { TranslationError } from "app/Application/Ports/TranslationService"
+import type { TranslationError, TranslationRateLimitExceededError } from "app/Application/Ports/TranslationService"
 import { TranslationService } from "app/Application/Ports/TranslationService"
 import * as Pokemon from "app/Domain/Pokemon"
 import { FunTranslationApi } from "app/Infrastructure/FunTranslationApi"
@@ -17,7 +17,8 @@ interface IPokemonService {
     Pokemon.Pokemon,
     | Pokemon.PokemonNotFoundError
     | Pokemon.PokemonFetchError
-    | TranslationError,
+    | TranslationError
+    | TranslationRateLimitExceededError,
     never
   >
 }

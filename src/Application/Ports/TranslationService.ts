@@ -12,6 +12,18 @@ export class TranslationError extends Schema.TaggedError<TranslationError>()(
 ) {}
 
 /**
+ * Translation rate limit exceeded from external service
+ */
+export class TranslationRateLimitExceededError extends Schema.TaggedError<TranslationRateLimitExceededError>()(
+  "TranslationRateLimitExceededError",
+  {
+    // This should have been the number of milliseconds
+    // For convenience we just return the message as returned by the FunTranslationApi
+    retryIn: Schema.String
+  }
+) {}
+
+/**
  * Translation service interface
  */
 export interface ITranslationService {
@@ -20,14 +32,14 @@ export interface ITranslationService {
    */
   readonly translateToShakespeare: (
     text: string
-  ) => Effect.Effect<string, TranslationError, never>
+  ) => Effect.Effect<string, TranslationError | TranslationRateLimitExceededError, never>
 
   /**
    * Translate text to Yoda style
    */
   readonly translateToYoda: (
     text: string
-  ) => Effect.Effect<string, TranslationError, never>
+  ) => Effect.Effect<string, TranslationError | TranslationRateLimitExceededError, never>
 }
 
 /**
