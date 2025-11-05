@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # Development service
+  app-dev:
+    build:
+      context: .
+      target: development
+    container_name: pokedex-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+    restart: unless-stopped
+
+  # Testing service
+  app-test:
+    build:
+      context: .
+      target: test
+    container_name: pokedex-test
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=test
+    command: npm test
+    profiles:
+      - test
+
+  # Unit tests service
+  app-test-unit:
+    build:
+      context: .
+      target: test
+    container_name: pokedex-test-unit
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=test
+    command: npm run test
+    profiles:
+      - test
+
+  # Smoke tests service (for integration tests)
+  app-test-smoke:
+    build:
+      context: .
+      target: test
+    container_name: pokedex-test-smoke
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=test
+    command: npm run test:smoke
+    profiles:
+      - test
+
+  # Watch mode for development testing
+  app-test-watch:
+    build:
+      context: .
+      target: test
+    container_name: pokedex-test-watch
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=test
+    command: npm run test:watch
+    stdin_open: true
+    tty: true
+    profiles:
+      - test
+
+networks:
+  default:
+    name: pokedex-network
