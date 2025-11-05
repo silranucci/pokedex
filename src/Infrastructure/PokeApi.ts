@@ -1,7 +1,8 @@
 import { FetchHttpClient, HttpClient } from "@effect/platform"
 import { PokemonRepository } from "app/Application/Ports/PokemonRepository"
 import * as Pokemon from "app/Domain/Pokemon"
-import { Effect, Layer, Match, ParseResult, pipe, Schema } from "effect"
+import { removeNonPrintableChars } from "app/lib/sanitizer"
+import { Effect, Layer, Match, ParseResult, Schema } from "effect"
 
 /**
  * External API Response Schemas
@@ -34,18 +35,18 @@ const PokemonFromPokeApiSpeciesResponse = Schema.transformOrFail(
   Pokemon.Pokemon,
   {
     strict: true,
-    decode: (response) =>
-      pipe(
-        Pokemon.Pokemon.make({
-          name: response.name,
-          description: response.flavor_text_entries
-            .filter((fte) => fte.language.name === "en")
-            .at(0)?.flavor_text || "",
-          habitat: response.habitat?.name || "unknown",
-          is_legendary: response.is_legendary
-        }),
-        ParseResult.succeed
-      ),
+    decode: (response) => {
+      const description = response.flavor_text_entries
+        .filter((fte) => fte.language.name === "en")
+        .at(0)?.flavor_text || ""
+      const pokemon = Pokemon.Pokemon.make({
+        name: response.name,
+        description: removeNonPrintableChars(description),
+        habitat: response.habitat?.name || "unknown",
+        is_legendary: response.is_legendary
+      })
+      return ParseResult.succeed(pokemon)
+    },
     encode: (pokemon, _, ast) =>
       ParseResult.fail(
         new ParseResult.Forbidden(

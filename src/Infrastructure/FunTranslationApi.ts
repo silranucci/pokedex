@@ -4,6 +4,7 @@ import {
   TranslationRateLimitExceededError,
   TranslationService
 } from "app/Application/Ports/TranslationService"
+import { removeNonPrintableChars } from "app/lib/sanitizer"
 import { Data, Effect, Layer, Match, Schema } from "effect"
 
 type FunTranslationApiKind = "shakespeare" | "yoda"
@@ -49,15 +50,14 @@ export const FunTranslationApi = Layer.effect(
 
     const makeTranslator =
       (kind: FunTranslationApiKind) =>
-      (text: string): Effect.Effect<string, TranslationError | TranslationRateLimitExceededError, never> =>
-        Effect.gen(function*() {
-          // Seems that the funapi does not like some unprintable characters
-          // eslint-disable-next-line no-control-regex
-          const encodedText = encodeURIComponent(text.replace(/[\x00-\x1F\x7F]/g, " "))
-          // Note that this Api has a rate limit of 10 requests per hour
-          const res = yield* httpClient.get(
-            `https://api.funtranslations.com/translate/${kind}.json?text=${encodedText}`
-          )
+        (text: string): Effect.Effect<string, TranslationError | TranslationRateLimitExceededError, never> =>
+          Effect.gen(function*() {
+            // Seems that the funapi does not like some unprintable characters
+            const encodedText = encodeURIComponent(removeNonPrintableChars(text))
+            // Note that this Api has a rate limit of 10 requests per hour
+            const res = yield* httpClient.get(
+              `https://api.funtranslations.com/translate/${kind}.json?text=${encodedText}`
+            )
 
           return yield* Match.value(res.status).pipe(
             Match.when(200, () =>
